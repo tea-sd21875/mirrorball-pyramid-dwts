@@ -3,18 +3,161 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Mirrorball Pyramid</title>
+
+  <style>
+    body {
+      background: #000;
+      color: white;
+      font-family: Arial, Helvetica, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 30px 15px;
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      color: #cfcfcf;
+      margin-bottom: 35px;
+    }
+
+    .couples {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      max-width: 1100px;
+      margin: auto;
+    }
+
+    .couple-card {
+      width: 150px;
+      background: #111;
+      border: 2px solid silver;
+      padding: 8px;
+      box-shadow: 4px 4px 0 #555;
+    }
+
+    .couple-card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .couple-name {
+      font-weight: bold;
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    .loading {
+      font-size: 20px;
+      margin-top: 40px;
+    }
+
+    .error {
+      color: #ff6b6b;
+      margin-top: 30px;
+    }
+  </style>
 </head>
 
 <body>
-  <h1>🪩 Mirrorball Pyramid</h1>
-  <h2>Rank the Stars. Build Your Pyramid.</h2>
 
-  <p>
-    Welcome to Mirrorball Pyramid — a fan-made Dancing With the Stars
-    ranking game.
-  </p>
+  <h1>🪩 MIRRORBALL PYRAMID 🪩</h1>
 
-  <button>BUILD MY PYRAMID</button>
+  <div class="subtitle">
+    ~* rank the stars • build your pyramid *~
+  </div>
+
+  <div id="couples" class="couples">
+    <div class="loading">Loading couples...</div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+
+    const SUPABASE_URL =
+      "https://uyqstzngztwurfdqmdww.supabase.co";
+
+    const SUPABASE_KEY =
+      "sb_publishable_HUh6Oe9R3R_PQv2nqgzcZw_RnM8Pk8B";
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+      );
+
+
+    async function loadCouples() {
+
+      const container =
+        document.getElementById("couples");
+
+
+      const { data, error } =
+        await supabaseClient
+          .from("couples")
+          .select("*")
+          .order("id");
+
+
+      if (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+          '<div class="error">Could not load couples.</div>';
+
+        return;
+      }
+
+
+      container.innerHTML = "";
+
+
+      data.forEach(couple => {
+
+        const card =
+          document.createElement("div");
+
+        card.className =
+          "couple-card";
+
+
+        card.innerHTML = `
+          <img
+            src="${couple.image_url}"
+            alt="${couple.celebrity_name} and ${couple.pro_name}"
+          >
+
+          <div class="couple-name">
+            ${couple.celebrity_name}
+            +
+            ${couple.pro_name}
+          </div>
+        `;
+
+
+        container.appendChild(card);
+
+      });
+
+    }
+
+
+    loadCouples();
+
+  </script>
+
 </body>
 </html>
