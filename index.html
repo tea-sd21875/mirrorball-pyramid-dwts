@@ -1,163 +1,732 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Mirrorball Pyramid</title>
+<title>Mirrorball Pyramid</title>
 
-  <style>
-    body {
-      background: #000;
-      color: white;
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 30px 15px;
-    }
+<style>
 
-    h1 {
-      font-size: 42px;
-      margin-bottom: 5px;
-    }
+* {
+  box-sizing: border-box;
+}
 
-    .subtitle {
-      color: #cfcfcf;
-      margin-bottom: 35px;
-    }
+body {
+  margin: 0;
+  padding: 20px 10px 60px;
+  background: #000;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
 
-    .couples {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 18px;
-      max-width: 1100px;
-      margin: auto;
-    }
+h1 {
+  font-size: 42px;
+  margin: 10px 0 5px;
+}
 
-    .couple-card {
-      width: 150px;
-      background: #111;
-      border: 2px solid silver;
-      padding: 8px;
-      box-shadow: 4px 4px 0 #555;
-    }
+.subtitle {
+  color: #ccc;
+  margin-bottom: 10px;
+}
 
-    .couple-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-    }
+.instructions {
+  color: #aaa;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
 
-    .couple-name {
-      font-weight: bold;
-      margin-top: 8px;
-      font-size: 15px;
-    }
+/* -----------------------
+   PYRAMID
+----------------------- */
 
-    .loading {
-      font-size: 20px;
-      margin-top: 40px;
-    }
+.pyramid {
+  max-width: 1050px;
+  margin: 0 auto 45px;
+}
 
-    .error {
-      color: #ff6b6b;
-      margin-top: 30px;
-    }
-  </style>
+.pyramid-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* -----------------------
+   RANKING SLOT
+----------------------- */
+
+.rank-slot {
+  width: 145px;
+  min-height: 205px;
+
+  border: 2px dashed #777;
+  background: #111;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.rank-slot:hover {
+  border-color: white;
+}
+
+.rank-number {
+  position: absolute;
+  top: 5px;
+  left: 7px;
+
+  font-size: 16px;
+  font-weight: bold;
+
+  background: black;
+  padding: 2px 6px;
+
+  z-index: 5;
+}
+
+.rank-slot.selected-slot {
+  outline: 3px solid white;
+}
+
+/* -----------------------
+   COUPLE CARDS
+----------------------- */
+
+.couple-card {
+  width: 135px;
+
+  background: #111;
+  border: 2px solid silver;
+
+  padding: 5px;
+
+  cursor: grab;
+
+  box-shadow: 3px 3px 0 #555;
+
+  user-select: none;
+}
+
+.couple-card:active {
+  cursor: grabbing;
+}
+
+.couple-card.selected {
+  outline: 4px solid white;
+}
+
+.couple-card img {
+  width: 100%;
+  height: 155px;
+
+  object-fit: cover;
+
+  display: block;
+
+  pointer-events: none;
+}
+
+.couple-name {
+  font-size: 13px;
+  font-weight: bold;
+
+  padding: 6px 2px 2px;
+
+  text-transform: uppercase;
+}
+
+/* Cards inside pyramid */
+
+.rank-slot .couple-card {
+  width: 135px;
+  box-shadow: none;
+}
+
+/* -----------------------
+   UNRANKED
+----------------------- */
+
+.unranked-section {
+  max-width: 1100px;
+
+  margin: auto;
+
+  border-top: 2px solid #777;
+
+  padding-top: 25px;
+}
+
+.unranked-section h2 {
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.unranked {
+  display: flex;
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  gap: 14px;
+
+  min-height: 200px;
+
+  padding: 15px;
+}
+
+/* -----------------------
+   BUTTONS
+----------------------- */
+
+.controls {
+  margin: 25px 0;
+}
+
+button {
+  background: #ddd;
+  color: black;
+
+  border-top: 3px solid white;
+  border-left: 3px solid white;
+  border-right: 3px solid #555;
+  border-bottom: 3px solid #555;
+
+  padding: 10px 20px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  margin: 5px;
+}
+
+button:active {
+  border-top: 3px solid #555;
+  border-left: 3px solid #555;
+  border-right: 3px solid white;
+  border-bottom: 3px solid white;
+}
+
+/* -----------------------
+   MOBILE
+----------------------- */
+
+@media (max-width: 700px) {
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .pyramid-row {
+    gap: 4px;
+  }
+
+  .rank-slot {
+    width: 23vw;
+    min-height: 145px;
+  }
+
+  .rank-slot .couple-card {
+    width: 100%;
+  }
+
+  .rank-slot .couple-card img {
+    height: 105px;
+  }
+
+  .rank-slot .couple-name {
+    font-size: 9px;
+  }
+
+  .rank-number {
+    font-size: 11px;
+  }
+
+}
+
+</style>
 </head>
+
 
 <body>
 
-  <h1>🪩 MIRRORBALL PYRAMID 🪩</h1>
+<h1>🪩 MIRRORBALL PYRAMID 🪩</h1>
 
-  <div class="subtitle">
-    ~* rank the stars • build your pyramid *~
+<div class="subtitle">
+  ~* rank the stars • build your pyramid *~
+</div>
+
+<div class="instructions">
+  Drag couples into the pyramid — or tap a couple, then tap a position.
+</div>
+
+
+<!-- PYRAMID -->
+
+<div class="pyramid">
+
+  <div class="pyramid-row">
+    <div class="rank-slot" data-rank="1">
+      <span class="rank-number">#1</span>
+    </div>
   </div>
 
-  <div id="couples" class="couples">
-    <div class="loading">Loading couples...</div>
+  <div class="pyramid-row">
+    <div class="rank-slot" data-rank="2">
+      <span class="rank-number">#2</span>
+    </div>
+
+    <div class="rank-slot" data-rank="3">
+      <span class="rank-number">#3</span>
+    </div>
   </div>
 
+  <div class="pyramid-row">
+    <div class="rank-slot" data-rank="4">
+      <span class="rank-number">#4</span>
+    </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <div class="rank-slot" data-rank="5">
+      <span class="rank-number">#5</span>
+    </div>
 
-  <script>
+    <div class="rank-slot" data-rank="6">
+      <span class="rank-number">#6</span>
+    </div>
+  </div>
 
-    const SUPABASE_URL =
-      "https://uyqstzngztwurfdqmdww.supabase.co";
+  <div class="pyramid-row">
+    <div class="rank-slot" data-rank="7">
+      <span class="rank-number">#7</span>
+    </div>
 
-    const SUPABASE_KEY =
-      "sb_publishable_HUh6Oe9R3R_PQv2nqgzcZw_RnM8Pk8B";
+    <div class="rank-slot" data-rank="8">
+      <span class="rank-number">#8</span>
+    </div>
 
-    const supabaseClient =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
+    <div class="rank-slot" data-rank="9">
+      <span class="rank-number">#9</span>
+    </div>
+
+    <div class="rank-slot" data-rank="10">
+      <span class="rank-number">#10</span>
+    </div>
+  </div>
+
+  <div class="pyramid-row">
+    <div class="rank-slot" data-rank="11">
+      <span class="rank-number">#11</span>
+    </div>
+
+    <div class="rank-slot" data-rank="12">
+      <span class="rank-number">#12</span>
+    </div>
+
+    <div class="rank-slot" data-rank="13">
+      <span class="rank-number">#13</span>
+    </div>
+
+    <div class="rank-slot" data-rank="14">
+      <span class="rank-number">#14</span>
+    </div>
+  </div>
+
+</div>
+
+
+<div class="controls">
+
+  <button id="resetButton">
+    RESET PYRAMID
+  </button>
+
+</div>
+
+
+<!-- UNRANKED COUPLES -->
+
+<div class="unranked-section">
+
+  <h2>★ UNRANKED COUPLES ★</h2>
+
+  <div id="unranked" class="unranked">
+
+    Loading couples...
+
+  </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+"https://uyqstzngztwurfdqmdww.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_HUh6Oe9R3R_PQv2nqgzcZw_RnM8Pk8B";
+
+const supabaseClient =
+window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+const unranked =
+document.getElementById("unranked");
+
+const slots =
+document.querySelectorAll(".rank-slot");
+
+let draggedCard = null;
+
+let selectedCard = null;
+
+
+/* -----------------------
+   LOAD COUPLES
+----------------------- */
+
+async function loadCouples() {
+
+  const { data, error } =
+    await supabaseClient
+      .from("couples")
+      .select("*")
+      .order("id");
+
+
+  if (error) {
+
+    console.error(error);
+
+    unranked.innerHTML =
+      "Could not load couples.";
+
+    return;
+  }
+
+
+  unranked.innerHTML = "";
+
+
+  data.forEach(couple => {
+
+    const card =
+      createCoupleCard(couple);
+
+    unranked.appendChild(card);
+
+  });
+
+}
+
+
+/* -----------------------
+   CREATE CARD
+----------------------- */
+
+function createCoupleCard(couple) {
+
+  const card =
+    document.createElement("div");
+
+  card.className =
+    "couple-card";
+
+  card.draggable = true;
+
+  card.dataset.coupleId =
+    couple.id;
+
+
+  card.innerHTML = `
+
+    <img
+      src="${couple.image_url}"
+      alt="${couple.celebrity_name} and ${couple.pro_name}"
+    >
+
+    <div class="couple-name">
+      ${couple.celebrity_name}
+      +
+      ${couple.pro_name}
+    </div>
+
+  `;
+
+
+  /* DRAG */
+
+  card.addEventListener(
+    "dragstart",
+    () => {
+
+      draggedCard = card;
+
+    }
+  );
+
+
+  card.addEventListener(
+    "dragend",
+    () => {
+
+      draggedCard = null;
+
+    }
+  );
+
+
+  /* CLICK / TAP */
+
+  card.addEventListener(
+    "click",
+    (event) => {
+
+      event.stopPropagation();
+
+      selectCard(card);
+
+    }
+  );
+
+
+  return card;
+
+}
+
+
+/* -----------------------
+   SELECT CARD
+----------------------- */
+
+function selectCard(card) {
+
+  if (selectedCard) {
+
+    selectedCard.classList.remove(
+      "selected"
+    );
+
+  }
+
+
+  if (selectedCard === card) {
+
+    selectedCard = null;
+
+    return;
+
+  }
+
+
+  selectedCard = card;
+
+  card.classList.add(
+    "selected"
+  );
+
+}
+
+
+/* -----------------------
+   PYRAMID SLOTS
+----------------------- */
+
+slots.forEach(slot => {
+
+
+  slot.addEventListener(
+    "dragover",
+    event => {
+
+      event.preventDefault();
+
+    }
+  );
+
+
+  slot.addEventListener(
+    "drop",
+    event => {
+
+      event.preventDefault();
+
+      if (!draggedCard) return;
+
+      moveCardToSlot(
+        draggedCard,
+        slot
       );
 
-
-    async function loadCouples() {
-
-      const container =
-        document.getElementById("couples");
+    }
+  );
 
 
-      const { data, error } =
-        await supabaseClient
-          .from("couples")
-          .select("*")
-          .order("id");
+  slot.addEventListener(
+    "click",
+    () => {
+
+      if (!selectedCard) return;
+
+      moveCardToSlot(
+        selectedCard,
+        slot
+      );
+
+    }
+  );
 
 
-      if (error) {
-
-        console.error(error);
-
-        container.innerHTML =
-          '<div class="error">Could not load couples.</div>';
-
-        return;
-      }
+});
 
 
-      container.innerHTML = "";
+/* -----------------------
+   MOVE / SWAP
+----------------------- */
+
+function moveCardToSlot(
+  card,
+  slot
+) {
+
+  const existingCard =
+    slot.querySelector(
+      ".couple-card"
+    );
 
 
-      data.forEach(couple => {
-
-        const card =
-          document.createElement("div");
-
-        card.className =
-          "couple-card";
+  const oldParent =
+    card.parentElement;
 
 
-        card.innerHTML = `
-          <img
-            src="${couple.image_url}"
-            alt="${couple.celebrity_name} and ${couple.pro_name}"
-          >
+  /*
+    If another couple already
+    occupies this rank,
+    swap the two cards.
+  */
 
-          <div class="couple-name">
-            ${couple.celebrity_name}
-            +
-            ${couple.pro_name}
-          </div>
-        `;
+  if (
+    existingCard &&
+    existingCard !== card
+  ) {
 
+    if (
+      oldParent.classList.contains(
+        "rank-slot"
+      )
+    ) {
 
-        container.appendChild(card);
+      oldParent.appendChild(
+        existingCard
+      );
 
-      });
+    } else {
+
+      unranked.appendChild(
+        existingCard
+      );
 
     }
 
+  }
 
-    loadCouples();
 
-  </script>
+  slot.appendChild(card);
+
+
+  if (selectedCard) {
+
+    selectedCard.classList.remove(
+      "selected"
+    );
+
+  }
+
+  selectedCard = null;
+
+}
+
+
+/* -----------------------
+   DROP BACK INTO UNRANKED
+----------------------- */
+
+unranked.addEventListener(
+  "dragover",
+  event => {
+
+    event.preventDefault();
+
+  }
+);
+
+
+unranked.addEventListener(
+  "drop",
+  event => {
+
+    event.preventDefault();
+
+    if (!draggedCard) return;
+
+    unranked.appendChild(
+      draggedCard
+    );
+
+  }
+);
+
+
+/* -----------------------
+   RESET
+----------------------- */
+
+document
+  .getElementById("resetButton")
+  .addEventListener(
+    "click",
+    () => {
+
+      const cards =
+        document.querySelectorAll(
+          ".couple-card"
+        );
+
+
+      cards.forEach(card => {
+
+        card.classList.remove(
+          "selected"
+        );
+
+        unranked.appendChild(
+          card
+        );
+
+      });
+
+
+      selectedCard = null;
+
+    }
+  );
+
+
+loadCouples();
+
+</script>
 
 </body>
 </html>
