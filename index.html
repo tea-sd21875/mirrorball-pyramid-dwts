@@ -267,7 +267,58 @@ button:active {
   Drag couples into the pyramid — or tap a couple, then tap a position.
 </div>
 
+<!-- ACCOUNT AREA -->
 
+<div id="authArea" style="margin: 20px auto 30px; max-width: 500px;">
+
+  <div id="loggedOutArea">
+
+    <input
+      id="emailInput"
+      type="email"
+      placeholder="Email"
+      style="padding:10px; margin:4px; width:200px;"
+    >
+
+    <input
+      id="passwordInput"
+      type="password"
+      placeholder="Password"
+      style="padding:10px; margin:4px; width:200px;"
+    >
+
+    <br>
+
+    <button id="signUpButton">
+      SIGN UP
+    </button>
+
+    <button id="loginButton">
+      LOG IN
+    </button>
+
+  </div>
+
+
+  <div id="loggedInArea" style="display:none;">
+
+    <div>
+      ★ LOGGED IN AS
+      <strong id="userEmail"></strong> ★
+    </div>
+
+    <button id="logoutButton">
+      LOG OUT
+    </button>
+
+  </div>
+
+  <div
+    id="authMessage"
+    style="margin-top:10px; font-size:13px;"
+  ></div>
+
+</div>
 <!-- PYRAMID -->
 
 <div class="pyramid">
@@ -343,9 +394,18 @@ button:active {
 
 <div class="controls">
 
+  <button id="saveButton">
+    💾 SAVE MY PYRAMID
+  </button>
+
   <button id="resetButton">
     RESET PYRAMID
   </button>
+
+  <div
+    id="saveMessage"
+    style="margin-top:10px; font-size:14px;"
+  ></div>
 
 </div>
 
@@ -815,7 +875,596 @@ document.addEventListener("drop", () => {
 
 
 runAutoScroll();
-</script>
+/* =====================================================
+   ACCOUNT + SAVE SYSTEM
+===================================================== */
 
-</body>
-</html>
+const emailInput =
+  document.getElementById("emailInput");
+
+const passwordInput =
+  document.getElementById("passwordInput");
+
+const signUpButton =
+  document.getElementById("signUpButton");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const logoutButton =
+  document.getElementById("logoutButton");
+
+const loggedOutArea =
+  document.getElementById("loggedOutArea");
+
+const loggedInArea =
+  document.getElementById("loggedInArea");
+
+const userEmail =
+  document.getElementById("userEmail");
+
+const authMessage =
+  document.getElementById("authMessage");
+
+const saveButton =
+  document.getElementById("saveButton");
+
+const saveMessage =
+  document.getElementById("saveMessage");
+
+
+/* -----------------------
+   SHOW LOGIN STATUS
+----------------------- */
+
+async function updateLoginDisplay() {
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+
+  if (user) {
+
+    loggedOutArea.style.display = "none";
+    loggedInArea.style.display = "block";
+
+    userEmail.textContent =
+      user.email;
+
+  } else {
+
+    loggedOutArea.style.display = "block";
+    loggedInArea.style.display = "none";
+
+    userEmail.textContent = "";
+
+  }
+
+}
+
+
+/* -----------------------
+   SIGN UP
+----------------------- */
+
+signUpButton.addEventListener(
+  "click",
+  async () => {
+
+    const email =
+      emailInput.value.trim();
+
+    const password =
+      passwordInput.value;
+
+
+    if (!email || !password) {
+
+      authMessage.textContent =
+        "Enter an email and password first.";
+
+      return;
+
+    }
+
+
+    authMessage.textContent =
+      "Creating account...";
+
+
+    const { data, error } =
+      await supabaseClient.auth.signUp({
+        email: email,
+        password: password
+      });
+
+
+    if (error) {
+
+      authMessage.textContent =
+        error.message;
+
+      return;
+
+    }
+
+
+    /*
+      Because email confirmation is ON
+      in Supabase, most new users will
+      need to check their email first.
+    */
+
+    if (!data.session) {
+
+      authMessage.textContent =
+        "★ Account created! Check your email to confirm your account, then come back and log in. ★";
+
+    } else {
+
+      authMessage.textContent =
+        "★ Account created! ★";
+
+    }
+
+
+    await updateLoginDisplay();
+
+  }
+);
+
+
+/* -----------------------
+   LOG IN
+----------------------- */
+
+loginButton.addEventListener(
+  "click",
+  async () => {
+
+    const email =
+      emailInput.value.trim();
+
+    const password =
+      passwordInput.value;
+
+
+    if (!email || !password) {
+
+      authMessage.textContent =
+        "Enter your email and password.";
+
+      return;
+
+    }
+
+
+    authMessage.textContent =
+      "Logging in...";
+
+
+    const { error } =
+      await supabaseClient.auth
+        .signInWithPassword({
+          email: email,
+          password: password
+        });
+
+
+    if (error) {
+
+      authMessage.textContent =
+        error.message;
+
+      return;
+
+    }
+
+
+    authMessage.textContent =
+      "★ LOGGED IN ★";
+
+    passwordInput.value = "";
+
+    await updateLoginDisplay();
+
+    await loadSavedPyramid();
+
+  }
+);
+
+
+/* -----------------------
+   LOG OUT
+----------------------- */
+
+logoutButton.addEventListener(
+  "click",
+  async () => {
+
+    await supabaseClient.auth.signOut();
+
+    authMessage.textContent =
+      "Logged out.";
+
+    saveMessage.textContent = "";
+
+    await updateLoginDisplay();
+
+  }
+);
+
+
+/* -----------------------
+   SAVE PYRAMID
+----------------------- */
+
+saveButton.addEventListener(
+  "click",
+  async () => {
+
+    saveMessage.textContent =
+      "Saving...";
+
+
+    /* Find logged-in user */
+
+    const {
+      data: { user }
+    } = await supabaseClient.auth.getUser();
+
+
+    if (!user) {
+
+      saveMessage.textContent =
+        "★ LOG IN OR SIGN UP TO SAVE YOUR PYRAMID ★";
+
+      return;
+
+    }
+
+
+    /* Read every pyramid position */
+
+    const rankingData = [];
+
+    for (const slot of slots) {
+
+      const card =
+        slot.querySelector(".couple-card");
+
+
+      if (!card) {
+
+        saveMessage.textContent =
+          "★ Rank all 14 couples before saving! ★";
+
+        return;
+
+      }
+
+
+      rankingData.push({
+
+        couple_id:
+          Number(card.dataset.coupleId),
+
+        position:
+          Number(slot.dataset.rank)
+
+      });
+
+    }
+
+
+    /*
+      WEEK 1 FOR NOW.
+
+      Later this will change depending
+      on whichever week tab is selected.
+    */
+
+    const weekNumber = 1;
+
+
+    /* Look for an existing Week 1 pyramid */
+
+    const {
+      data: existingPyramids,
+      error: lookupError
+    } =
+      await supabaseClient
+        .from("pyramids")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("week_number", weekNumber)
+        .limit(1);
+
+
+    if (lookupError) {
+
+      console.error(lookupError);
+
+      saveMessage.textContent =
+        "Could not save pyramid.";
+
+      return;
+
+    }
+
+
+    let pyramidId;
+
+
+    /*
+      If they already saved Week 1,
+      reuse the same pyramid.
+    */
+
+    if (
+      existingPyramids &&
+      existingPyramids.length > 0
+    ) {
+
+      pyramidId =
+        existingPyramids[0].id;
+
+
+      /*
+        Remove the old ranking rows
+        before inserting the new order.
+      */
+
+      const { error: deleteError } =
+        await supabaseClient
+          .from("rankings")
+          .delete()
+          .eq("pyramid_id", pyramidId);
+
+
+      if (deleteError) {
+
+        console.error(deleteError);
+
+        saveMessage.textContent =
+          "Could not update pyramid.";
+
+        return;
+
+      }
+
+    }
+
+
+    /*
+      Otherwise create their Week 1
+      pyramid for the first time.
+    */
+
+    else {
+
+      const {
+        data: newPyramid,
+        error: pyramidError
+      } =
+        await supabaseClient
+          .from("pyramids")
+          .insert({
+
+            user_id: user.id,
+            week_number: weekNumber
+
+          })
+          .select("id")
+          .single();
+
+
+      if (pyramidError) {
+
+        console.error(pyramidError);
+
+        saveMessage.textContent =
+          "Could not create pyramid.";
+
+        return;
+
+      }
+
+
+      pyramidId =
+        newPyramid.id;
+
+    }
+
+
+    /* Attach pyramid ID to all 14 rankings */
+
+    const rowsToSave =
+      rankingData.map(rank => ({
+
+        pyramid_id: pyramidId,
+        couple_id: rank.couple_id,
+        position: rank.position
+
+      }));
+
+
+    const { error: rankingError } =
+      await supabaseClient
+        .from("rankings")
+        .insert(rowsToSave);
+
+
+    if (rankingError) {
+
+      console.error(rankingError);
+
+      saveMessage.textContent =
+        "Could not save rankings.";
+
+      return;
+
+    }
+
+
+    saveMessage.textContent =
+      "★ PYRAMID SAVED! ★";
+
+  }
+);
+
+
+/* -----------------------
+   LOAD SAVED PYRAMID
+----------------------- */
+
+async function loadSavedPyramid() {
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+
+  if (!user) {
+    return;
+  }
+
+
+  const weekNumber = 1;
+
+
+  /* Find this user's Week 1 pyramid */
+
+  const {
+    data: pyramids,
+    error: pyramidError
+  } =
+    await supabaseClient
+      .from("pyramids")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("week_number", weekNumber)
+      .limit(1);
+
+
+  if (
+    pyramidError ||
+    !pyramids ||
+    pyramids.length === 0
+  ) {
+
+    return;
+
+  }
+
+
+  const pyramidId =
+    pyramids[0].id;
+
+
+  /* Get their saved rankings */
+
+  const {
+    data: savedRankings,
+    error: rankingError
+  } =
+    await supabaseClient
+      .from("rankings")
+      .select("couple_id, position")
+      .eq("pyramid_id", pyramidId)
+      .order("position");
+
+
+  if (rankingError) {
+
+    console.error(rankingError);
+
+    return;
+
+  }
+
+
+  /*
+    Put each saved couple
+    back into its saved slot.
+  */
+
+  savedRankings.forEach(rank => {
+
+    const card =
+      document.querySelector(
+        `.couple-card[data-couple-id="${rank.couple_id}"]`
+      );
+
+    const slot =
+      document.querySelector(
+        `.rank-slot[data-rank="${rank.position}"]`
+      );
+
+
+    if (card && slot) {
+
+      slot.appendChild(card);
+
+    }
+
+  });
+
+
+  if (savedRankings.length > 0) {
+
+    saveMessage.textContent =
+      "★ YOUR SAVED WEEK 1 PYRAMID ★";
+
+  }
+
+}
+
+
+/* -----------------------
+   AUTH CHANGES
+----------------------- */
+
+supabaseClient.auth.onAuthStateChange(
+  async (event, session) => {
+
+    await updateLoginDisplay();
+
+  }
+);
+
+
+/* -----------------------
+   START ACCOUNT SYSTEM
+----------------------- */
+
+async function startAccountSystem() {
+
+  await updateLoginDisplay();
+
+
+  const {
+    data: { user }
+  } = await supabaseClient.auth.getUser();
+
+
+  if (user) {
+
+    /*
+      Give the couple cards a moment
+      to finish loading before restoring
+      their saved pyramid.
+    */
+
+    setTimeout(
+      loadSavedPyramid,
+      500
+    );
+
+  }
+
+}
+
+
+startAccountSystem();
