@@ -730,3 +730,90 @@ loadCouples();
 
 </body>
 </html>
+/* -----------------------
+   AUTO SCROLL WHILE DRAGGING
+----------------------- */
+
+let autoScrollSpeed = 0;
+let autoScrollAnimation = null;
+
+function runAutoScroll() {
+
+  if (autoScrollSpeed !== 0) {
+    window.scrollBy(0, autoScrollSpeed);
+  }
+
+  autoScrollAnimation =
+    requestAnimationFrame(runAutoScroll);
+}
+
+document.addEventListener("dragover", event => {
+
+  const mouseY = event.clientY;
+  const screenHeight = window.innerHeight;
+
+  const scrollZone = 160;
+  const maxSpeed = 18;
+
+  /* Near top of screen */
+
+  if (mouseY < scrollZone) {
+
+    const strength =
+      (scrollZone - mouseY) / scrollZone;
+
+    autoScrollSpeed =
+      -Math.max(
+        3,
+        Math.round(maxSpeed * strength)
+      );
+
+  }
+
+  /* Near bottom of screen */
+
+  else if (
+    mouseY >
+    screenHeight - scrollZone
+  ) {
+
+    const strength =
+      (
+        mouseY -
+        (screenHeight - scrollZone)
+      ) / scrollZone;
+
+    autoScrollSpeed =
+      Math.max(
+        3,
+        Math.round(maxSpeed * strength)
+      );
+
+  }
+
+  /* Middle of screen */
+
+  else {
+
+    autoScrollSpeed = 0;
+
+  }
+
+});
+
+
+document.addEventListener("dragend", () => {
+
+  autoScrollSpeed = 0;
+
+});
+
+
+document.addEventListener("drop", () => {
+
+  autoScrollSpeed = 0;
+
+});
+
+
+runAutoScroll();
